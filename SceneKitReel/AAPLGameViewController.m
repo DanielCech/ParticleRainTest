@@ -56,16 +56,17 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     SCNNode *_spotLightNode;
     SCNNode *_ambientLightNode;
     SCNNode *_floorNode;
-    SCNNode *_sceneKitLogo;
+    SCNNode *_roofNode;
+//    SCNNode *_sceneKitLogo;
     SCNNode *_mainWall;
     SCNNode *_invisibleWallForPhysicsSlide;
     
     //ship
-    SCNNode *_shipNode;
-    SCNNode *_shipPivot;
-    SCNNode *_shipHandle;
+//    SCNNode *_shipNode;
+//    SCNNode *_shipPivot;
+//    SCNNode *_shipHandle;
     SCNNode *_introNodeGroup;
-    
+//    
     //physics slide
     NSMutableArray *_boxes;
     
@@ -117,9 +118,38 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     [self setup];
     [super viewDidLoad];
     
+//    [self orderOutPhysicsFields];
+//    [self showPhysicsFields];
+    
+//    [SCNTransaction begin];
+//    [SCNTransaction setAnimationDuration:0.75];
+//    [SCNTransaction setCompletionBlock:^{
+//        [self presentStep:_step];
+//    }];
+//    
+//    _cameraHandle.transform = _cameraHandleTransforms[3];
+//    _cameraOrientation.transform = _cameraOrientationTransforms[_step];
+//    
+//    [SCNTransaction commit];
+    
+    [self next];
+    [self next];
+    [self next];
+    
+    [self nextIntroductionStep];
+    
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//        [self next];
+////        _step = 3;
+////        [self presentStep:3];
+//    });
+    
+    
+    
+    
     //!!!
     //[self presentStep:3];
-    [self showPhysicsFields];
+    //[self showPhysicsFields];
 }
 #else
 - (void)awakeFromNib
@@ -275,7 +305,7 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     
     _floorNode = [SCNNode node];
     _floorNode.geometry = floor;
-    _floorNode.geometry.firstMaterial.diffuse.contents = @"wood.png";
+    _floorNode.geometry.firstMaterial.diffuse.contents = @"bottom.jpg";
     _floorNode.geometry.firstMaterial.locksAmbientWithDiffuse = YES;
     _floorNode.geometry.firstMaterial.diffuse.wrapS = SCNWrapModeRepeat;
     _floorNode.geometry.firstMaterial.diffuse.wrapT = SCNWrapModeRepeat;
@@ -292,8 +322,8 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
 {
     // create the wall geometry
     SCNPlane *wallGeometry = [SCNPlane planeWithWidth:800 height:200];
-    wallGeometry.firstMaterial.diffuse.contents = @"wallPaper.png";
-    wallGeometry.firstMaterial.diffuse.contentsTransform = SCNMatrix4Mult(SCNMatrix4MakeScale(8, 2, 1), SCNMatrix4MakeRotation(M_PI_4, 0, 0, 1));
+    wallGeometry.firstMaterial.diffuse.contents = @"front.jpg";
+    //wallGeometry.firstMaterial.diffuse.contentsTransform = SCNMatrix4Mult(SCNMatrix4MakeScale(8, 2, 1), SCNMatrix4MakeRotation(M_PI_4, 0, 0, 1));
     wallGeometry.firstMaterial.diffuse.wrapS = SCNWrapModeRepeat;
     wallGeometry.firstMaterial.diffuse.wrapT = SCNWrapModeRepeat;
     wallGeometry.firstMaterial.doubleSided = NO;
@@ -305,16 +335,16 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     wallWithBaseboardNode.physicsBody.restitution = 1.0;
     wallWithBaseboardNode.castsShadow = NO;
     
-    SCNNode *baseboardNode = [SCNNode nodeWithGeometry:[SCNBox boxWithWidth:800 height:8 length:0.5 chamferRadius:0]];
-    baseboardNode.geometry.firstMaterial.diffuse.contents = @"baseboard.jpg";
-    baseboardNode.geometry.firstMaterial.diffuse.wrapS = SCNWrapModeRepeat;
-    baseboardNode.geometry.firstMaterial.doubleSided = NO;
-    baseboardNode.geometry.firstMaterial.locksAmbientWithDiffuse = YES;
-    baseboardNode.position = SCNVector3Make(0, -wallWithBaseboardNode.position.y + 4, 0.5);
-    baseboardNode.castsShadow = NO;
-    baseboardNode.renderingOrder = -3; //render before others
+//    SCNNode *baseboardNode = [SCNNode nodeWithGeometry:[SCNBox boxWithWidth:800 height:8 length:0.5 chamferRadius:0]];
+//    baseboardNode.geometry.firstMaterial.diffuse.contents = @"baseboarda.jpg";
+//    baseboardNode.geometry.firstMaterial.diffuse.wrapS = SCNWrapModeRepeat;
+//    baseboardNode.geometry.firstMaterial.doubleSided = NO;
+//    baseboardNode.geometry.firstMaterial.locksAmbientWithDiffuse = YES;
+//    baseboardNode.position = SCNVector3Make(0, -wallWithBaseboardNode.position.y + 4, 0.5);
+//    baseboardNode.castsShadow = NO;
+//    baseboardNode.renderingOrder = -3; //render before others
 
-    [wallWithBaseboardNode addChildNode:baseboardNode];
+//    [wallWithBaseboardNode addChildNode:baseboardNode];
     
     //front walls
     _mainWall = wallWithBaseboardNode;
@@ -372,93 +402,93 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     _introductionStep = 1;
     
     // configure the lighting for the introduction (dark lighting)
-    _ambientLightNode.light.color = [SKColor blackColor];
-    _spotLightNode.light.color = [SKColor blackColor];
+    _ambientLightNode.light.color = [SKColor whiteColor];
+    _spotLightNode.light.color = [SKColor whiteColor];
     _spotLightNode.position = SCNVector3Make(50, 90, -50);
     _spotLightNode.eulerAngles = SCNVector3Make(-M_PI_2*0.75, M_PI_4*0.5, 0);
     
     //put all texts under this node to remove all at once later
     _introNodeGroup = [SCNNode node];
     
-    //Slide 1
-#define LOGO_SIZE 70
-#define TITLE_SIZE (TEXT_SCALE*0.45)
-    SCNNode *sceneKitLogo = [SCNNode nodeWithGeometry:[SCNPlane planeWithWidth:LOGO_SIZE height:LOGO_SIZE]];
-    sceneKitLogo.geometry.firstMaterial.doubleSided = YES;
-    sceneKitLogo.geometry.firstMaterial.diffuse.contents = @"SceneKit.png";
-    sceneKitLogo.geometry.firstMaterial.emission.contents = @"SceneKit.png";
-    _sceneKitLogo = sceneKitLogo;
-    
-    _sceneKitLogo.renderingOrder = -1;
-    _floorNode.renderingOrder = -2;
-
-    [_introNodeGroup addChildNode:sceneKitLogo];
-    sceneKitLogo.position = SCNVector3Make(200, LOGO_SIZE/2, 200);
-
-    SCNVector3 position = SCNVector3Make(200, 0, 200);
-    
-    _cameraNode.position = SCNVector3Make(200, -20, position.z+150);
-    _cameraNode.eulerAngles = SCNVector3Make(-M_PI_2*0.06, 0, 0);
+//    //Slide 1
+//#define LOGO_SIZE 70
+//#define TITLE_SIZE (TEXT_SCALE*0.45)
+//    SCNNode *sceneKitLogo = [SCNNode nodeWithGeometry:[SCNPlane planeWithWidth:LOGO_SIZE height:LOGO_SIZE]];
+//    sceneKitLogo.geometry.firstMaterial.doubleSided = YES;
+//    sceneKitLogo.geometry.firstMaterial.diffuse.contents = @"SceneKit.png";
+//    sceneKitLogo.geometry.firstMaterial.emission.contents = @"SceneKit.png";
+//    _sceneKitLogo = sceneKitLogo;
+//    
+//    _sceneKitLogo.renderingOrder = -1;
+//    _floorNode.renderingOrder = -2;
+//
+//    [_introNodeGroup addChildNode:sceneKitLogo];
+//    sceneKitLogo.position = SCNVector3Make(200, LOGO_SIZE/2, 200);
+//
+//    SCNVector3 position = SCNVector3Make(200, 0, 200);
+//    
+//    _cameraNode.position = SCNVector3Make(200, -20, position.z+150);
+//    _cameraNode.eulerAngles = SCNVector3Make(-M_PI_2*0.06, 0, 0);
     
     /* hierarchy
      shipHandle
      |_ shipXTranslate
      |_ shipPivot
      |_ ship */
-    SCNScene *modelScene = [SCNScene sceneNamed:@"ship.dae" inDirectory:@"assets.scnassets/models" options:nil];
-    _shipNode = [modelScene.rootNode childNodeWithName:@"Aircraft" recursively:YES];
+//    SCNScene *modelScene = [SCNScene sceneNamed:@"ship.dae" inDirectory:@"assets.scnassets/models" options:nil];
+//    _shipNode = [modelScene.rootNode childNodeWithName:@"Aircraft" recursively:YES];
+//
+//    SCNNode*shipMesh = _shipNode.childNodes[0];
+//    // shipMesh.geometry.firstMaterial.fresnelExponent = 1.0;
+//    shipMesh.geometry.firstMaterial.emission.intensity = 0.5;
+//    shipMesh.renderingOrder = -3;
+//    
+//    _shipPivot = [SCNNode node];
+//    SCNNode *shipXTranslate = [SCNNode node];
+//    _shipHandle = [SCNNode node];
+//    
+//    _shipHandle.position =  SCNVector3Make(200 - 500, 0, position.z + 30);
+//    _shipNode.position = SCNVector3Make(50, 30, 0);
+//    
+//    [_shipPivot addChildNode:_shipNode];
+//    [shipXTranslate addChildNode:_shipPivot];
+//    [_shipHandle addChildNode:shipXTranslate];
+//    [_introNodeGroup addChildNode:_shipHandle];
+//    
+//    //animate ship
+//    [_shipNode removeAllActions];
+//    _shipNode.rotation = SCNVector4Make(0, 0, 1, M_PI_4*0.5);
+//    
+//    //make spotlight relative to the ship
+//    SCNVector3 newPosition = SCNVector3Make(50, 100, 0);
+//    SCNMatrix4 oldTransform = [_shipPivot convertTransform:SCNMatrix4Identity fromNode:_spotLightNode];
+//    
+//    [_spotLightNode removeFromParentNode];
+//    _spotLightNode.transform = oldTransform;
+//    [_shipPivot addChildNode:_spotLightNode];
+//
+//    _spotLightNode.position = newPosition; // will animate implicitly
+//    _spotLightNode.eulerAngles = SCNVector3Make(-M_PI_2, 0, 0);
+//    _spotLightNode.light.spotOuterAngle = 120;
+//    
+//    _shipPivot.eulerAngles = SCNVector3Make(0, M_PI_2, 0);
+//    SCNAction *action = [SCNAction sequence:@[[SCNAction repeatActionForever:[SCNAction rotateByX:0 y:M_PI z:0 duration:2]]]];
+//    [_shipPivot runAction:action];
 
-    SCNNode*shipMesh = _shipNode.childNodes[0];
-    // shipMesh.geometry.firstMaterial.fresnelExponent = 1.0;
-    shipMesh.geometry.firstMaterial.emission.intensity = 0.5;
-    shipMesh.renderingOrder = -3;
-    
-    _shipPivot = [SCNNode node];
-    SCNNode *shipXTranslate = [SCNNode node];
-    _shipHandle = [SCNNode node];
-    
-    _shipHandle.position =  SCNVector3Make(200 - 500, 0, position.z + 30);
-    _shipNode.position = SCNVector3Make(50, 30, 0);
-    
-    [_shipPivot addChildNode:_shipNode];
-    [shipXTranslate addChildNode:_shipPivot];
-    [_shipHandle addChildNode:shipXTranslate];
-    [_introNodeGroup addChildNode:_shipHandle];
-    
-    //animate ship
-    [_shipNode removeAllActions];
-    _shipNode.rotation = SCNVector4Make(0, 0, 1, M_PI_4*0.5);
-    
-    //make spotlight relative to the ship
-    SCNVector3 newPosition = SCNVector3Make(50, 100, 0);
-    SCNMatrix4 oldTransform = [_shipPivot convertTransform:SCNMatrix4Identity fromNode:_spotLightNode];
-    
-    [_spotLightNode removeFromParentNode];
-    _spotLightNode.transform = oldTransform;
-    [_shipPivot addChildNode:_spotLightNode];
-
-    _spotLightNode.position = newPosition; // will animate implicitly
-    _spotLightNode.eulerAngles = SCNVector3Make(-M_PI_2, 0, 0);
-    _spotLightNode.light.spotOuterAngle = 120;
-    
-    _shipPivot.eulerAngles = SCNVector3Make(0, M_PI_2, 0);
-    SCNAction *action = [SCNAction sequence:@[[SCNAction repeatActionForever:[SCNAction rotateByX:0 y:M_PI z:0 duration:2]]]];
-    [_shipPivot runAction:action];
-
-    CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"position.x"];
-    animation.fromValue = @(-50);
-    animation.toValue =  @(+50);
-    animation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-    animation.autoreverses = YES;
-    animation.duration = 2;
-    animation.repeatCount = MAXFLOAT;
-    animation.timeOffset = -animation.duration*0.5;
-    [shipXTranslate addAnimation:animation forKey:nil];
-
-    SCNNode *emitter = [_shipNode childNodeWithName:@"emitter" recursively:YES];
-    SCNParticleSystem *ps = [SCNParticleSystem particleSystemNamed:@"reactor.scnp" inDirectory:@"assets.scnassets/particles"];
-    [emitter addParticleSystem:ps];
-    _shipHandle.position = SCNVector3Make(_shipHandle.position.x, _shipHandle.position.y, _shipHandle.position.z-50);
+//    CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"position.x"];
+//    animation.fromValue = @(-50);
+//    animation.toValue =  @(+50);
+//    animation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+//    animation.autoreverses = YES;
+//    animation.duration = 2;
+//    animation.repeatCount = MAXFLOAT;
+//    animation.timeOffset = -animation.duration*0.5;
+//    [shipXTranslate addAnimation:animation forKey:nil];
+//
+//    SCNNode *emitter = [_shipNode childNodeWithName:@"emitter" recursively:YES];
+//    SCNParticleSystem *ps = [SCNParticleSystem particleSystemNamed:@"reactor.scnp" inDirectory:@"assets.scnassets/particles"];
+//    [emitter addParticleSystem:ps];
+//    _shipHandle.position = SCNVector3Make(_shipHandle.position.x, _shipHandle.position.y, _shipHandle.position.z-50);
 
     [_scene.rootNode addChildNode:_introNodeGroup];
     
@@ -469,15 +499,15 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
         [SCNTransaction begin];
         [SCNTransaction setAnimationDuration:2.5];
         
-        _shipHandle.position = SCNVector3Make(_shipHandle.position.x+500, _shipHandle.position.y, _shipHandle.position.z);
+        //_shipHandle.position = SCNVector3Make(_shipHandle.position.x+500, _shipHandle.position.y, _shipHandle.position.z);
         
         _spotLightNode.light.color = [SKColor colorWithWhite:1 alpha:1];
-        sceneKitLogo.geometry.firstMaterial.emission.intensity = 0.80;
+        //sceneKitLogo.geometry.firstMaterial.emission.intensity = 0.80;
 
         [SCNTransaction commit];
     }];
     
-    _spotLightNode.light.color = [SKColor colorWithWhite:0.001 alpha:1];
+    _spotLightNode.light.color = [SKColor whiteColor];
     
     [SCNTransaction commit];
 }
@@ -508,25 +538,25 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     [SCNTransaction setAnimationDuration:1.0];
     [SCNTransaction setCompletionBlock:^{
         
-        if (_introductionStep == 0) {
-            //We did finish introduction step
-
-            [_shipHandle removeFromParentNode];
-            _shipHandle = nil;
-            _shipPivot = nil;
-            _shipNode = nil;
-            
-            _floorNode.renderingOrder = 0;
-
-            //We did finish the whole introduction
-            [_introNodeGroup removeFromParentNode];
-            _introNodeGroup = nil;
-            [self next];
-        }
+//        if (_introductionStep == 0) {
+//            //We did finish introduction step
+//
+////            [_shipHandle removeFromParentNode];
+////            _shipHandle = nil;
+////            _shipPivot = nil;
+////            _shipNode = nil;
+//            
+//            _floorNode.renderingOrder = 0;
+//
+//            //We did finish the whole introduction
+//            [_introNodeGroup removeFromParentNode];
+//            _introNodeGroup = nil;
+//            [self next];
+//        }
     }];
     
     if (_introductionStep == 2) {
-        _sceneKitLogo.renderingOrder = 0;
+        //_sceneKitLogo.renderingOrder = 0;
 
         //restore spot light config
         _spotLightNode.light.spotOuterAngle = 70;
@@ -536,11 +566,11 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
         
         [_spotLightParentNode addChildNode:_spotLightNode];
         
-        _cameraNode.position = SCNVector3Make(_cameraNode.position.x, _cameraNode.position.y, _cameraNode.position.z-TEXT_Z_SPACING);
+        //_cameraNode.position = SCNVector3Make(_cameraNode.position.x, _cameraNode.position.y, _cameraNode.position.z-TEXT_Z_SPACING);
 
         _spotLightNode.transform = _originalSpotTransform;
         _ambientLightNode.light.color = [SKColor colorWithWhite:0.3 alpha:1.0];
-        _cameraNode.position = SCNVector3Make(0, 0, 120);
+        _cameraNode.position = SCNVector3Make(0, 0, 150);
         _cameraNode.eulerAngles = SCNVector3Make(0, 0, 0);
 
         _introductionStep = 0;//introduction is over
@@ -893,12 +923,12 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     ps.colliderNodes = @[_floorNode, colliderNode];
     [emitter addParticleSystem:ps];
     
-    SCNAction *tr = [SCNAction moveBy:SCNVector3Make(60, 0, 0) duration:1];
-    tr.timingMode = SCNActionTimingModeEaseInEaseOut;
-    
-    [_cameraHandle runAction:[SCNAction sequence:@[[SCNAction waitForDuration:2],tr,[SCNAction runBlock:^(SCNNode *node){
-        ps.birthRate = 300;
-    }]]]];
+//    SCNAction *tr = [SCNAction moveBy:SCNVector3Make(60, 0, 0) duration:1];
+//    tr.timingMode = SCNActionTimingModeEaseInEaseOut;
+//    
+//    [_cameraHandle runAction:[SCNAction sequence:@[[SCNAction waitForDuration:2],tr,[SCNAction runBlock:^(SCNNode *node){
+//        ps.birthRate = 300;
+//    }]]]];
 }
 
 //remove particle slide
@@ -937,31 +967,34 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     
     [SCNTransaction begin];
     [SCNTransaction setAnimationDuration:0.75];
-    _spotLightNode.light.color = [SKColor colorWithWhite:0.5 alpha:1.0];
-    _ambientLightNode.light.color = [SKColor blackColor];
+    _spotLightNode.light.color = [SKColor colorWithWhite:0.9 alpha:1.0];
+    _ambientLightNode.light.color = [SKColor colorWithWhite:0.7 alpha:1.0];
     [SCNTransaction commit];
 
     //remove gravity for this slide
     _scene.physicsWorld.gravity = SCNVector3Zero;
     
-    //move camera
-    SCNAction *tr = [SCNAction moveBy:SCNVector3Make(0, 0, dz) duration:1];
-    tr.timingMode = SCNActionTimingModeEaseInEaseOut;
-    [_cameraHandle runAction:tr];
+//    //move camera
+//    SCNAction *tr = [SCNAction moveBy:SCNVector3Make(0, 0, dz) duration:1];
+//    tr.timingMode = SCNActionTimingModeEaseInEaseOut;
+//    [_cameraHandle runAction:tr];
     
     //add particles
     _fieldEmitter = [SCNNode node];
-    _fieldEmitter.position = SCNVector3Make(_cameraHandle.position.x, 5, dz);
+    _fieldEmitter.position = SCNVector3Make(_cameraHandle.position.x, 140, dz);
     
     SCNParticleSystem *ps = [SCNParticleSystem particleSystemNamed:@"bubbles.scnp" inDirectory:@"assets.scnassets/particles/"];
     
-    ps.particleColor = [SKColor colorWithRed:0.8 green:0. blue:0. alpha:1.0];
-    ps.particleColorVariation = SCNVector4Make(0.3, 0.2, 0.3, 0.);
+    ps.particleColor = [SKColor colorWithRed:0.7 green:0.7 blue:0.7 alpha:1.0];
+    //ps.particleColorVariation = SCNVector4Make(0.3, 0.2, 0.3, 0.);
     ps.sortingMode = SCNParticleSortingModeDistance;
     ps.blendMode = SCNParticleBlendModeAlpha;
-    NSArray *cubeMap = @[@"right.jpg", @"left.jpg", @"top.jpg", @"bottom.jpg", @"front.jpg", @"back.jpg"];
-    ps.particleImage = cubeMap;
+    //NSArray *cubeMap = @[@"drop.png"];
+    ps.particleImage = @"drop.png";
     ps.fresnelExponent = 2;
+    ps.particleDiesOnCollision = NO;
+    ps.particleBounce = 0.2;
+    ps.particleBounceVariation = 0.5;
     ps.colliderNodes = @[_floorNode, _mainWall];
     
     ps.emitterShape = [SCNBox boxWithWidth:200 height:0 length:100 chamferRadius:0];
@@ -988,7 +1021,7 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     [SCNTransaction begin];
     [SCNTransaction setAnimationDuration:0.75];
     _spotLightNode.light.color = [SKColor colorWithWhite:1.0 alpha:1.0];
-    _ambientLightNode.light.color = [SKColor colorWithWhite:0.3 alpha:1.0];
+    _ambientLightNode.light.color = [SKColor colorWithWhite:1 alpha:1.0];
     [SCNTransaction commit];
     
     //move camera
