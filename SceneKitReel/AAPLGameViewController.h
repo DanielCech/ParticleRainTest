@@ -8,12 +8,16 @@
   
  */
 
+#import <CoreMotion/CoreMotion.h>
+
 #if TARGET_OS_IPHONE
 @import UIKit;
 @interface AAPLGameViewController : UIViewController <SCNSceneRendererDelegate, SCNPhysicsContactDelegate>
 #else
 @interface AAPLGameViewController : NSViewController <SCNSceneRendererDelegate, SCNPhysicsContactDelegate>
 #endif
+
+@property (strong, nonatomic) CMMotionManager *motionManager;
 
 - (void)handleTapAtPoint:(CGPoint)p;
 - (void)handleDoubleTapAtPoint:(CGPoint)p;

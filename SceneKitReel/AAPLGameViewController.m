@@ -108,9 +108,24 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     SCNMatrix4 _cameraOrientationTransforms[SLIDE_COUNT];
     dispatch_source_t _timer;
 
+    SCNParticleSystem *_rainParticleSystem;
     
     BOOL _preventNext;
 }
+
+
+- (void)viewDidLoad
+{
+    self.motionManager = [[CMMotionManager alloc] init];
+    self.motionManager.accelerometerUpdateInterval = .2;
+    self.motionManager.gyroUpdateInterval = 0.01;
+    
+    [self.motionManager startDeviceMotionUpdatesToQueue:[NSOperationQueue currentQueue]
+                                    withHandler:^(CMDeviceMotion *deviceMotion, NSError *error) {
+                                        [self processDeviceMotion:deviceMotion];
+                                    }];
+}
+
 
 #if TARGET_OS_IPHONE
 - (void)viewDidAppear:(BOOL)animated
@@ -959,6 +974,18 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     _fieldOwner.physicsField.strength = 200000.0;
 }
 
+//- (void)setGravityVector:(CGPoint) p
+//{
+//    SCNView *scnView = (SCNView *) self.view;
+//    SCNVector3 pTmp = [scnView projectPoint:SCNVector3Make(0, 0, 50)];
+//    SCNVector3 p3d = [scnView unprojectPoint:SCNVector3Make(p.x, p.y, pTmp.z)];
+//    p3d.z = 50;
+//    p3d.y = MAX(p3d.y, 5);
+//    _fieldOwner.position = p3d;
+//    _fieldOwner.physicsField.strength = 200000.0;
+//
+//}
+
 
 //present physics field slide
 - (void)showPhysicsFields
@@ -983,23 +1010,23 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     _fieldEmitter = [SCNNode node];
     _fieldEmitter.position = SCNVector3Make(_cameraHandle.position.x, 140, dz);
     
-    SCNParticleSystem *ps = [SCNParticleSystem particleSystemNamed:@"bubbles.scnp" inDirectory:@"assets.scnassets/particles/"];
+    _rainParticleSystem = [SCNParticleSystem particleSystemNamed:@"bubbles.scnp" inDirectory:@"assets.scnassets/particles/"];
     
-    ps.particleColor = [SKColor colorWithRed:0.7 green:0.7 blue:0.7 alpha:1.0];
+    _rainParticleSystem.particleColor = [SKColor colorWithRed:0.7 green:0.7 blue:0.7 alpha:1.0];
     //ps.particleColorVariation = SCNVector4Make(0.3, 0.2, 0.3, 0.);
-    ps.sortingMode = SCNParticleSortingModeDistance;
-    ps.blendMode = SCNParticleBlendModeAlpha;
+    _rainParticleSystem.sortingMode = SCNParticleSortingModeDistance;
+    _rainParticleSystem.blendMode = SCNParticleBlendModeAlpha;
     //NSArray *cubeMap = @[@"drop.png"];
-    ps.particleImage = @"drop.png";
-    ps.fresnelExponent = 2;
-    ps.particleDiesOnCollision = NO;
-    ps.particleBounce = 0.2;
-    ps.particleBounceVariation = 0.5;
-    ps.colliderNodes = @[_floorNode, _mainWall];
+    _rainParticleSystem.particleImage = @"drop.png";
+    _rainParticleSystem.fresnelExponent = 2;
+    _rainParticleSystem.particleDiesOnCollision = NO;
+    _rainParticleSystem.particleBounce = 0.2;
+    _rainParticleSystem.particleBounceVariation = 0.5;
+    _rainParticleSystem.colliderNodes = @[_floorNode, _mainWall];
     
-    ps.emitterShape = [SCNBox boxWithWidth:200 height:0 length:100 chamferRadius:0];
+    _rainParticleSystem.emitterShape = [SCNBox boxWithWidth:200 height:0 length:100 chamferRadius:0];
     
-    [_fieldEmitter addParticleSystem:ps];
+    [_fieldEmitter addParticleSystem:_rainParticleSystem];
     [_scene.rootNode addChildNode:_fieldEmitter];
     
     //field
@@ -1430,7 +1457,7 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
         }
         case 3:
         {
-            [overlay showLabel:@"Physics Fields"];
+            [overlay showLabel:@"Particle rain"];
             [overlay runAction:[SKAction sequence:@[[SKAction waitForDuration:2], [SKAction runBlock:^{
                 if (_step == 3)
                     [overlay showLabel:nil];
@@ -1531,6 +1558,34 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
         }
     }
 }
+
+#pragma mark - Gyro
+
+-(void)processDeviceMotion:(CMDeviceMotion*)deviceMotion
+{
+    //[self tiltCameraWithOffset:CGPointMake(deviceMotion.attitude.pitch*100, deviceMotion.attitude.roll*100)];
+    
+    //[self moveEmitterTo:CGPointMake(deviceMotion.attitude.pitch*50, deviceMotion.attitude.roll*50)];
+    
+    
+    static int counter = 0;
+    
+    CGFloat newRoll = deviceMotion.attitude.yaw;// - 3.14/2.0;
+    
+    CGFloat x = -(sin(newRoll*2*3.14)) * 5;
+    CGFloat y = -(cos(newRoll*2*3.14) + 1) * 5;
+    CGFloat z = 0;
+    
+    if (counter > 15) {
+        NSLog(@"roll:%f pitch:%f yaw:%f newRoll:%f [%f, %f, %f]", deviceMotion.attitude.roll, deviceMotion.attitude.pitch, deviceMotion.attitude.yaw, newRoll, x, y, z);
+        counter = 0;
+    }
+    
+    counter++;
+    
+    _rainParticleSystem.emittingDirection = SCNVector3Make(x, y, z);
+}
+
 
 #pragma mark - Gestures
 
