@@ -1023,6 +1023,7 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     _rainParticleSystem.particleBounce = 0.2;
     _rainParticleSystem.particleBounceVariation = 0.5;
     _rainParticleSystem.colliderNodes = @[_floorNode, _mainWall];
+    _rainParticleSystem.affectedByGravity = YES;
     
     _rainParticleSystem.emitterShape = [SCNBox boxWithWidth:200 height:0 length:100 chamferRadius:0];
     
@@ -1570,10 +1571,10 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     
     static int counter = 0;
     
-    CGFloat newRoll = deviceMotion.attitude.yaw;// - 3.14/2.0;
+    CGFloat newRoll = deviceMotion.attitude.pitch;// - 3.14/2.0;
     
-    CGFloat x = -(sin(newRoll*2*3.14)) * 5;
-    CGFloat y = -(cos(newRoll*2*3.14) + 1) * 5;
+    CGFloat x = -newRoll * 120.0f;//-(sin(newRoll*3.14*2)) * 120;
+    CGFloat y = -(cos(newRoll*3.14) + 1) * 120;
     CGFloat z = 0;
     
     if (counter > 15) {
@@ -1583,7 +1584,8 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     
     counter++;
     
-    _rainParticleSystem.emittingDirection = SCNVector3Make(x, y, z);
+    //_rainParticleSystem.acceleration = SCNVector3Make(0, -120, 0);
+    _rainParticleSystem.acceleration = SCNVector3Make(x, y, z);
 }
 
 
@@ -1761,7 +1763,7 @@ static CGFloat randFloat(CGFloat min, CGFloat max)
     }
     if (_step == 3) {
         //bubbles
-        [self moveEmitterTo:p];
+        //[self moveEmitterTo:p];
     }
     
     if (_step == 5) {
